@@ -1,3 +1,8 @@
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
+
 # User Authentication REST API
 
 A RESTful API for user authentication and session management built with **Node.js**, **Express**, and **MongoDB**. Designed as a ready-to-use backend authentication layer for web and mobile applications.
