@@ -32,8 +32,7 @@ A RESTful API for user authentication and session management built with **Node.j
 ```
 ├── models/
 │   └── user.js          # Mongoose schema, password hashing middleware
-├── routes/
-│   └── auth.js          # All authentication and user routes
+├── auth.js              # All authentication and user routes
 ├── .env                 # Environment variables (see setup below)
 └── server.js            # Entry point (not included in this example)
 ```
@@ -51,8 +50,6 @@ SALT_ROUNDS=10
 PORT=3000
 ```
 
-> Never commit `.env` to version control. Add it to `.gitignore`.
-
 ---
 
 ## Getting Started
@@ -65,7 +62,7 @@ npm install
 node server.js
 
 # Or with hot reload
-npx nodemon server.js
+npm run dev
 ```
 
 ---
@@ -195,16 +192,27 @@ The token is returned in the `Authorization` response header after a successful 
 
 ```json
 {
-  "express": "^4.x",
-  "mongoose": "^7.x",
-  "jsonwebtoken": "^9.x",
-  "bcrypt": "^5.x",
-  "node-cron": "^3.x",
-  "dotenv": "^16.x"
+  "bcrypt": "^6.0.0",
+  "cors": "^2.8.5",
+  "dotenv": "^16.4.7",
+  "express": "^4.21.0",
+  "jsonwebtoken": "^9.0.2",
+  "moment": "^2.30.1",
+  "moment-timezone": "^0.5.46",
+  "mongoose": "^8.8.4",
+  "node-cron": "^4.2.1"
+}
+```
+
+Dev dependencies:
+```json
+{
+  "nodemon": "^3.1.0"
 }
 ```
 
 Install with:
 ```bash
-npm install express mongoose jsonwebtoken bcrypt node-cron dotenv
+npm install bcrypt cors dotenv express jsonwebtoken moment moment-timezone mongoose node-cron
+npm install --save-dev nodemon
 ```
