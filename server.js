@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
+const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 
 const userRoutes = require("./user.js");
@@ -24,18 +24,39 @@ mongoose.connect(uri)
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-// Route
-app.use('/user', userRoutes);
-
-// Error handler
-app.use((err, res) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error' });
+// Strict limit for auth endpoints — prevents brute force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { message: "Too many requests, please try again later." },
 });
 
-// Avvio del server
-app.listen(process.env.PORT, () => {
+// Generous limit for general API usage
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { message: "Too many requests, please try again later." },
+});
+
+// Route
+app.use("/user/login", authLimiter);
+app.use("/user/register", authLimiter);
+app.use("/user", apiLimiter, userRoutes);
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal server error." });
+});
+
+// Start server
+app.listen(process.env.PORT || 5000, () => {
   console.log(`Server listening on http://localhost:${process.env.PORT}`);
+});
+
+process.on("SIGINT", async () => {
+  await mongoose.connection.close();
+  console.log("MongoDB connection closed.");
+  process.exit(0);
 });

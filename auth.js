@@ -2,6 +2,28 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("./models/user.js");
+const Joi = require("joi");
+
+const registerSchema = Joi.object({
+  user: Joi.string().alphanum().min(3).max(30).required(),
+  psw: Joi.string().min(8).max(128).required(),
+  nome: Joi.string().min(2).max(50).required(),
+  birth: Joi.date().iso().less("now").optional(),
+  mail: Joi.string().email().optional(),
+});
+
+const loginSchema = Joi.object({
+  user: Joi.string().required(),
+  psw: Joi.string().required(),
+});
+
+const updateSchema = Joi.object({
+  user: Joi.string().alphanum().min(3).max(30).optional(),
+  psw: Joi.string().min(8).max(128).optional(),
+  nome: Joi.string().min(2).max(50).optional(),
+  birth: Joi.date().iso().less("now").optional(),
+}).min(1); // At least one field required
+
 
 const router = express.Router();
 
@@ -48,15 +70,13 @@ const authenticateToken = async (req, res, next) => {
 // POST /login
 // ---------------------------------------------------------------------------
 router.post("/login", async (req, res) => {
-  // Cast to String to prevent NoSQL injection
-  const user = String(req.body.user || "");
-  const psw = String(req.body.psw || "");
+  const { error } = loginSchema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
+  const { user, psw } = req.body;
 
   try {
     const foundUser = await User.findOne({ username: user });
 
-    // FIX: Use a generic error message for both "user not found" and "wrong password"
-    // to prevent user enumeration attacks.
     const isMatch = foundUser ? await foundUser.comparePassword(psw) : false;
     if (!foundUser || !isMatch) {
       return res.status(400).json({ message: "Invalid credentials." });
@@ -86,11 +106,10 @@ router.post("/login", async (req, res) => {
 // POST /register
 // ---------------------------------------------------------------------------
 router.post("/register", async (req, res) => {
-  const user = String(req.body.user || "");
-  const psw = String(req.body.psw || "");
-  const nome = String(req.body.nome || "");
-  const birth = String(req.body.birth || "");
-  const mail = String(req.body.mail || "");
+  const { error } = registerSchema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
+  
+  const { user, psw, nome, birth, mail } = req.body;
 
   try {
     const existingUser = await User.findOne({ username: user });
@@ -116,19 +135,12 @@ router.post("/register", async (req, res) => {
 
 // ---------------------------------------------------------------------------
 // POST /update  (protected)
-// FIX: Route is now protected by authenticateToken.
-// FIX: The user is identified via req.user (set by the middleware) instead of
-//      trusting a token value sent in the request body, which would have
-//      allowed any authenticated user to update any other user's data.
-// FIX: Password hashing is handled here manually via bcrypt because
-//      findOneAndUpdate bypasses Mongoose's pre("save") middleware.
 // ---------------------------------------------------------------------------
 router.post("/update", authenticateToken, async (req, res) => {
-  const user = String(req.body.user || "");
-  const psw = String(req.body.psw || "");
-  const nome = String(req.body.nome || "");
-  const birth = String(req.body.birth || "");
+  const { error } = updateSchema.validate(req.body);
+  if (error) return res.status(400).json({ message: error.details[0].message });
 
+  const { user, psw, nome, birth } = req.body;
   const updatedData = {};
 
   try {
@@ -165,8 +177,6 @@ router.post("/logout", async (req, res) => {
 
 // ---------------------------------------------------------------------------
 // GET /getUserFullName  (protected)
-// FIX: Uses req.user set by authenticateToken instead of running a second
-//      redundant database query.
 // ---------------------------------------------------------------------------
 router.get("/getUserFullName", authenticateToken, (req, res) => {
   const capitalizeEachWord = (str) =>
@@ -186,9 +196,6 @@ router.get("/getUserFullName", authenticateToken, (req, res) => {
 
 // ---------------------------------------------------------------------------
 // GET /getUserID  (protected)
-// FIX: Uses req.user instead of a second DB query.
-// FIX: Returns the ObjectId as-is. The previous .replace(/\D/g, "") stripped
-//      all letters from the hex string, producing a completely invalid ID.
 // ---------------------------------------------------------------------------
 router.get("/getUserID", authenticateToken, (req, res) => {
   try {
@@ -201,8 +208,6 @@ router.get("/getUserID", authenticateToken, (req, res) => {
 
 // ---------------------------------------------------------------------------
 // GET /isSubscribed  (protected)
-// FIX: Uses req.user instead of a second DB query.
-// FIX: subState is now a plain Boolean in the schema, so no array unwrapping needed.
 // ---------------------------------------------------------------------------
 router.get("/isSubscribed", authenticateToken, (req, res) => {
   try {
