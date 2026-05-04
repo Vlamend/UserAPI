@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(process.env.PORT || 5000, "0.0.0.0/0", () => {
+app.listen(process.env.PORT || 5000, "0.0.0.0", () => {
   console.log(`Server listening on ${process.env.PORT}`);
 });
 
