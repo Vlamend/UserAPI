@@ -4,7 +4,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 
-const userRoutes = require("./user.js");
+const userRoutes = require("./auth.js");
 
 const app = express();
 
