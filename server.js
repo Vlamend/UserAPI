@@ -51,8 +51,8 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server listening on http://localhost:${process.env.PORT}`);
+app.listen(process.env.PORT || 5000, "0.0.0.0/0", () => {
+  console.log(`Server listening on ${process.env.PORT}`);
 });
 
 process.on("SIGINT", async () => {
